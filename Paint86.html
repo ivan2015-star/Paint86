@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas - Paint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tahoma:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Tahoma', sans-serif;
+            background-color: #008080;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjMDA4MDgwIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiMwMDYwNjAiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=');
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .window {
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+            border-radius: 5px 5px 0 0;
+            overflow: hidden;
+            width: 800px;
+            max-width: 100%;
+            position: absolute;
+            top: 50px;
+            left: 50px;
+        }
+        
+        .title-bar {
+            background: linear-gradient(to right, #000080, #1084d0);
+            color: white;
+            padding: 5px 8px;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+        }
+        
+        .window-controls {
+            display: flex;
+        }
+        
+        .control-btn {
+            width: 22px;
+            height: 22px;
+            margin-left: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            background: #c0c0c0;
+            border: 1px solid #808080;
+            border-top-color: white;
+            border-left-color: white;
+        }
+        
+        .control-btn:active {
+            border: 1px solid #808080;
+            border-top-color: #404040;
+            border-left-color: #404040;
+        }
+        
+        .menu-bar {
+            background: #c0c0c0;
+            border-bottom: 1px solid #808080;
+            padding: 2px 0;
+            display: flex;
+            font-size: 12px;
+        }
+        
+        .menu-item {
+            padding: 2px 8px;
+            position: relative;
+        }
+        
+        .menu-item:hover {
+            background: #000080;
+            color: white;
+        }
+        
+        .toolbar {
+            background: #c0c0c0;
+            padding: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            border-bottom: 1px solid #808080;
+        }
+        
+        .tool-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #c0c0c0;
+            border: 1px solid #808080;
+            border-top-color: white;
+            border-left-color: white;
+            cursor: pointer;
+        }
+        
+        .tool-btn.active {
+            border: 1px solid #808080;
+            border-top-color: #404040;
+            border-left-color: #404040;
+        }
+        
+        .tool-btn:active {
+            border: 1px solid #808080;
+            border-top-color: #404040;
+            border-left-color: #404040;
+        }
+        
+        .color-palette {
+            background: #c0c0c0;
+            padding: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            border-bottom: 1px solid #808080;
+        }
+        
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #808080;
+            cursor: pointer;
+        }
+        
+        .color-box.active {
+            border: 2px solid black;
+        }
+        
+        .canvas-container {
+            background: white;
+            padding: 10px;
+            border-bottom: 1px solid #808080;
+        }
+        
+        canvas {
+            border: 1px solid #808080;
+            background: white;
+            cursor: crosshair;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .status-bar {
+            background: #c0c0c0;
+            padding: 2px 8px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid white;
+        }
+        
+        .resize-handle {
+            width: 16px;
+            height: 16px;
+            background: #c0c0c0;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            cursor: nwse-resize;
+            border-top: 1px solid white;
+            border-left: 1px solid white;
+        }
+        
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #c0c0c0;
+            border: 1px solid #808080;
+            border-top-color: white;
+            border-left-color: white;
+            min-width: 150px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .menu-item:hover .dropdown {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 4px 20px 4px 25px;
+            position: relative;
+        }
+        
+        .dropdown-item:hover {
+            background: #000080;
+            color: white;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background: #808080;
+            margin: 2px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="window" id="window">
+        <div class="title-bar" id="titleBar">
+            <span>Canvas - Paint</span>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-item">
+                File
+                <div class="dropdown">
+                    <div class="dropdown-item">New</div>
+                    <div class="dropdown-item">Open...</div>
+                    <div class="dropdown-item">Save</div>
+                    <div class="dropdown-item">Save As...</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item">Exit</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                Help
+                <div class="dropdown">
+                    <div class="dropdown-item" id="tutorialBtn">Tutorial</div>
+                </div>
+            </div>
+        </div>
+        <div class="toolbar">
+            <div class="tool-btn active" data-tool="pencil" title="Pencil">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 14L14 2L12 0L0 12L2 14Z" fill="black"/>
+                    <path d="M12 2L14 4L6 12L4 10L12 2Z" fill="black"/>
+                </svg>
+            </div>
+            <div class="tool-btn" data-tool="eraser" title="Eraser">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="8" width="8" height="6" fill="white" stroke="black"/>
+                    <rect x="2" y="6" width="8" height="6" fill="white" stroke="black"/>
+                    <rect x="0" y="4" width="8" height="6" fill="white" stroke="black"/>
+                </svg>
+            </div>
+            <div class="tool-btn" data-tool="line" title="Line">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="2" y1="14" x2="14" y2="2" stroke="black" stroke-width="2"/>
+                </svg>
+            </div>
+            <div class="tool-btn" data-tool="rectangle" title="Rectangle">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="2" width="12" height="12" fill="none" stroke="black" stroke-width="2"/>
+                </svg>
+            </div>
+            <div class="tool-btn" data-tool="ellipse" title="Ellipse">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="8" cy="8" rx="6" ry="4" fill="none" stroke="black" stroke-width="2"/>
+                </svg>
+            </div>
+            <div class="tool-btn" data-tool="fill" title="Fill">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 2L14 8L8 14L2 8L8 2Z" fill="none" stroke="black" stroke-width="2"/>
+                    <path d="M8 5L11 8L8 11L5 8L8 5Z" fill="none" stroke="black" stroke-width="1"/>
+                </svg>
+            </div>
+            <div class="tool-btn" data-tool="text" title="Text">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <text x="2" y="12" font-family="Arial" font-size="12" fill="black">A</text>
+                </svg>
+            </div>
+            <div class="tool-btn" data-tool="select" title="Select">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="4" width="8" height="8" fill="none" stroke="black" stroke-width="1" stroke-dasharray="2,2"/>
+                </svg>
+            </div>
+        </div>
+        <div class="color-palette">
+            <div class="color-box active" style="background-color: #000000;" data-color="#000000"></div>
+            <div class="color-box" style="background-color: #808080;" data-color="#808080"></div>
+            <div class="color-box" style="background-color: #800000;" data-color="#800000"></div>
+            <div class="color-box" style="background-color: #808000;" data-color="#808000"></div>
+            <div class="color-box" style="background-color: #008000;" data-color="#008000"></div>
+            <div class="color-box" style="background-color: #008080;" data-color="#008080"></div>
+            <div class="color-box" style="background-color: #000080;" data-color="#000080"></div>
+            <div class="color-box" style="background-color: #800080;" data-color="#800080"></div>
+            <div class="color-box" style="background-color: #c0c0c0;" data-color="#c0c0c0"></div>
+            <div class="color-box" style="background-color: #ff0000;" data-color="#ff0000"></div>
+            <div class="color-box" style="background-color: #ffff00;" data-color="#ffff00"></div>
+            <div class="color-box" style="background-color: #00ff00;" data-color="#00ff00"></div>
+            <div class="color-box" style="background-color: #00ffff;" data-color="#00ffff"></div>
+            <div class="color-box" style="background-color: #0000ff;" data-color="#0000ff"></div>
+            <div class="color-box" style="background-color: #ff00ff;" data-color="#ff00ff"></div>
+            <div class="color-box" style="background-color: #ffffff;" data-color="#ffffff"></div>
+        </div>
+        <input type="file" id="fileInput" accept=".png" style="display: none;">
+        <div class="canvas-container">
+            <canvas id="canvas" width="780" height="500"></canvas>
+            <input type="text" id="textInput" style="position: absolute; display: none; border: 1px dashed black; font-family: Arial; font-size: 12px;">
+        </div>
+        <div class="status-bar">
+            <div class="coordinates">0, 0</div>
+            <div class="size">780 x 500</div>
+        </div>
+        <div class="resize-handle" id="resizeHandle"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const colorBoxes = document.querySelectorAll('.color-box');
+            const toolBtns = document.querySelectorAll('.tool-btn');
+            const coordinatesDisplay = document.querySelector('.coordinates');
+            const windowElement = document.getElementById('window');
+            const titleBar = document.getElementById('titleBar');
+            const resizeHandle = document.getElementById('resizeHandle');
+            
+            let isDrawing = false;
+            let currentTool = 'pencil';
+            let currentColor = '#000000';
+            let startX, startY;
+            let savedImageData;
+            
+            // Set canvas background to white
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Color selection
+            colorBoxes.forEach(box => {
+                box.addEventListener('click', function() {
+                    colorBoxes.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentColor = this.getAttribute('data-color');
+                });
+            });
+            
+            // Tool selection
+            toolBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    toolBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentTool = this.getAttribute('data-tool');
+                });
+            });
+            
+            // Mouse coordinates tracking
+            canvas.addEventListener('mousemove', function(e) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                coordinatesDisplay.textContent = `${Math.round(x)}, ${Math.round(y)}`;
+                
+                if (isDrawing) {
+                    draw(x, y, e);
+                }
+            });
+            
+            // Drawing functions
+            canvas.addEventListener('mousedown', function(e) {
+                isDrawing = true;
+                const rect = canvas.getBoundingClientRect();
+                startX = e.clientX - rect.left;
+                startY = e.clientY - rect.top;
+                
+                if (currentTool === 'pencil' || currentTool === 'eraser') {
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineWidth = currentTool === 'eraser' ? 20 : 2;
+                    ctx.strokeStyle = currentTool === 'eraser' ? 'white' : currentColor;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                } else {
+                    savedImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                }
+            });
+            
+            canvas.addEventListener('mouseup', function(e) {
+                if (isDrawing) {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    if (currentTool !== 'pencil' && currentTool !== 'eraser' && currentTool !== 'text') {
+                        draw(x, y, e);
+                    }
+                }
+                isDrawing = false;
+                
+                if (currentTool === 'text') {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const textInput = document.getElementById('textInput');
+                    textInput.style.left = (rect.left + x) + 'px';
+                    textInput.style.top = (rect.top + y) + 'px';
+                    textInput.style.display = 'block';
+                    textInput.focus();
+                    
+                    textInput.onkeydown = function(e) {
+                        if (e.key === 'Enter') {
+                            ctx.fillStyle = currentColor;
+                            ctx.font = '12px Arial';
+                            ctx.fillText(textInput.value, x, y);
+                            textInput.value = '';
+                            textInput.style.display = 'none';
+                        }
+                    };
+                }
+            });
+            
+            canvas.addEventListener('mouseout', function() {
+                isDrawing = false;
+            });
+            
+            function draw(x, y, e) {
+                switch (currentTool) {
+                    case 'pencil':
+                    case 'eraser':
+                        ctx.lineTo(x, y);
+                        ctx.stroke();
+                        break;
+                    case 'line':
+                        ctx.putImageData(savedImageData, 0, 0);
+                        ctx.beginPath();
+                        ctx.moveTo(startX, startY);
+                        ctx.lineTo(x, y);
+                        ctx.strokeStyle = currentColor;
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        break;
+                    case 'rectangle':
+                        ctx.putImageData(savedImageData, 0, 0);
+                        ctx.beginPath();
+                        ctx.rect(startX, startY, x - startX, y - startY);
+                        ctx.strokeStyle = currentColor;
+                        ctx.fillStyle = currentColor;
+                        ctx.lineWidth = 2;
+                        if (e && e.shiftKey) {
+                            const size = Math.min(Math.abs(x - startX), Math.abs(y - startY));
+                            const signX = x > startX ? 1 : -1;
+                            const signY = y > startY ? 1 : -1;
+                            ctx.putImageData(savedImageData, 0, 0);
+                            ctx.beginPath();
+                            ctx.rect(startX, startY, size * signX, size * signY);
+                            ctx.fill();
+                        } else {
+                            ctx.stroke();
+                        }
+                        break;
+                    case 'ellipse':
+                        ctx.putImageData(savedImageData, 0, 0);
+                        ctx.beginPath();
+                        let radiusX = Math.abs(x - startX) / 2;
+                        let radiusY = Math.abs(y - startY) / 2;
+                        const centerX = startX + (x - startX) / 2;
+                        const centerY = startY + (y - startY) / 2;
+                        
+                        if (e && e.shiftKey) {
+                            radiusX = radiusY = Math.max(radiusX, radiusY);
+                        }
+                        
+                        ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+                        ctx.strokeStyle = currentColor;
+                        ctx.fillStyle = currentColor;
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        break;
+                    case 'fill':
+                        ctx.fillStyle = currentColor;
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        break;
+                }
+            }
+            
+            // Window dragging functionality
+            let isDragging = false;
+            let offsetX, offsetY;
+            
+            titleBar.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                offsetX = e.clientX - windowElement.getBoundingClientRect().left;
+                offsetY = e.clientY - windowElement.getBoundingClientRect().top;
+                windowElement.style.cursor = 'grabbing';
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                
+                // Calculate new position
+                let newX = e.clientX - offsetX;
+                let newY = e.clientY - offsetY;
+                
+                // Keep window within viewport bounds
+                const maxX = window.innerWidth - windowElement.offsetWidth;
+                const maxY = window.innerHeight - windowElement.offsetHeight;
+                
+                newX = Math.max(0, Math.min(newX, maxX));
+                newY = Math.max(0, Math.min(newY, maxY));
+                
+                windowElement.style.left = newX + 'px';
+                windowElement.style.top = newY + 'px';
+            });
+            
+            document.addEventListener('mouseup', function() {
+                isDragging = false;
+                windowElement.style.cursor = '';
+            });
+            
+            // Window resizing
+            let isResizing = false;
+            
+            resizeHandle.addEventListener('mousedown', function(e) {
+                isResizing = true;
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (isResizing) {
+                    const newWidth = e.clientX - windowElement.getBoundingClientRect().left + 10;
+                    const newHeight = e.clientY - windowElement.getBoundingClientRect().top + 10;
+                    
+                    if (newWidth > 300 && newHeight > 300) {
+                        windowElement.style.width = newWidth + 'px';
+                        
+                        // Adjust canvas size
+                        const canvasContainer = document.querySelector('.canvas-container');
+                        const newCanvasWidth = newWidth - 20;
+                        const newCanvasHeight = newHeight - 150; // Approximate adjustment
+                        
+                        if (newCanvasWidth > 100 && newCanvasHeight > 100) {
+                            canvas.width = newCanvasWidth;
+                            canvas.height = newCanvasHeight;
+                            document.querySelector('.size').textContent = `${canvas.width} x ${canvas.height}`;
+                            
+                            // Redraw white background
+                            ctx.fillStyle = 'white';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        }
+                    }
+                }
+            });
+            
+            document.addEventListener('mouseup', function() {
+                isResizing = false;
+            });
+            
+            // File menu functionality
+            const menuItems = document.querySelectorAll('.dropdown-item');
+            
+            // New canvas
+            menuItems[0].addEventListener('click', function() {
+                if (confirm('Do you want to create a new drawing?')) {
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            });
+
+            // Save
+            menuItems[2].addEventListener('click', function() {
+                const link = document.createElement('a');
+                link.download = 'drawing.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+
+            // Open file
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.png';
+            fileInput.style.display = 'none';
+            document.body.appendChild(fileInput);
+
+            menuItems[1].addEventListener('click', function() {
+                fileInput.value = ''; // Reset to allow selecting same file again
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (file.type !== 'image/png') {
+                    alert('Please select a PNG file');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Clear canvas
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Draw the image centered
+                        const scale = Math.min(
+                            canvas.width / img.width,
+                            canvas.height / img.height
+                        );
+                        const width = img.width * scale;
+                        const height = img.height * scale;
+                        const x = (canvas.width - width) / 2;
+                        const y = (canvas.height - height) / 2;
+                        
+                        ctx.drawImage(img, x, y, width, height);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Save As
+            menuItems[3].addEventListener('click', function() {
+                const fileName = prompt('Enter file name (without extension):', 'drawing');
+                if (fileName) {
+                    const link = document.createElement('a');
+                    link.download = `${fileName}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }
+            });
+
+            // Tutorial button functionality
+            document.getElementById('tutorialBtn').addEventListener('click', function() {
+                alert("Welcome to Paint Tutorial!\n\n1. Select a tool from the toolbar\n2. Choose a color from the palette\n3. Click and drag on canvas to draw\n4. Use File menu to save your artwork");
+            });
+        });
+    </script>
+</body>
+</html>
